@@ -1,8 +1,16 @@
-const { Telegraf } = require("telegraf");
 require("dotenv").config();
-const command_text = require("./components/constants");
 
+const { Telegraf, Markup, Scenes, session } = require("telegraf");
+const SceneGenerator = require("./components/Scenes");
+const commandList = require("./components/comandList");
+
+const currentScene = new SceneGenerator();
+const emailScene = currentScene.EmailScene();
+const stage = new Scenes.Stage([emailScene]);
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+bot.use(session(), stage.middleware());
+bot.hears("Получить сертификат", (ctx) => ctx.scene.enter("email"));
 bot.start(async (ctx) => {
   await ctx.replyWithSticker(
     "CAACAgIAAxkBAAEEr-5ieQL1WxfzAqTkp2h4abIxHlLVJQACdAwAAra7OEuOzqfMQMSAJSQE"
@@ -14,14 +22,10 @@ bot.start(async (ctx) => {
         }!`
       : `Привет, незнакомец!}`
   );
-  console.log(ctx.message);
+  commandList(ctx);
 });
 
-bot.help(async(ctx) => await ctx.reply(command_text.commands));
-
-// bot.command("questions", (ctx) => {});
-
 bot.launch(); //start bot
-// Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
+module.exports = bot;
